@@ -61,6 +61,7 @@ async function fetchLeagueStandings(leagueId: number): Promise<FplLeagueResponse
     ...first,
     standings: {
       ...first.standings,
+      page: first.standings?.page ?? 1,
       results,
       has_next: false,
     },
