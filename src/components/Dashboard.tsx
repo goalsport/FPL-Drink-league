@@ -1,11 +1,9 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
 import { PointsChart } from "@/components/PointsChart";
 import { RemainingFixtures } from "@/components/RemainingFixtures";
 import { StandingsTable } from "@/components/StandingsTable";
-import { formatUpdated } from "@/lib/format";
 import type { LeagueDashboard, ViewMode } from "@/lib/types";
 
 type DashboardProps = {
@@ -13,8 +11,6 @@ type DashboardProps = {
 };
 
 export function Dashboard({ data }: DashboardProps) {
-  const router = useRouter();
-  const [isRefreshing, startRefresh] = useTransition();
   const [mode, setMode] = useState<ViewMode>("weekly");
   const [selectedGw, setSelectedGw] = useState(data.currentGw);
 
@@ -33,26 +29,16 @@ export function Dashboard({ data }: DashboardProps) {
   );
 
   return (
-    <main className="relative mx-auto min-h-screen max-w-6xl px-4 py-5 sm:px-6">
-      <header className="panel mb-4 flex flex-col gap-3 rounded-2xl px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="display text-2xl text-[var(--foam)] sm:text-3xl">{data.leagueName.toUpperCase()}</h1>
-          <p className="text-xs text-[var(--muted)]">
-            GW {data.currentGw} · {managers.length} คน · {formatUpdated(data.lastUpdated)}
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => startRefresh(() => router.refresh())}
-          disabled={isRefreshing}
-          className="rounded-full bg-[var(--gold)] px-4 py-2 text-sm font-semibold text-[#3d2a00] disabled:opacity-60"
-        >
-          {isRefreshing ? "กำลังรีเฟรช..." : "รีเฟรชข้อมูล"}
-        </button>
+    <main className="relative mx-auto min-h-screen max-w-6xl px-3 py-2 sm:px-6 sm:py-5">
+      <header className="mb-2 flex items-baseline justify-between gap-2 sm:mb-3 sm:rounded-2xl sm:border sm:border-[var(--line)] sm:bg-white sm:px-4 sm:py-3">
+        <h1 className="display text-lg text-[var(--foam)] sm:text-3xl">{data.leagueName.toUpperCase()}</h1>
+        <p className="text-[11px] text-[var(--muted)] sm:text-xs">
+          GW {data.currentGw} · {managers.length} คน
+        </p>
       </header>
 
-      <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="panel flex rounded-full p-1">
+      <div className="mb-2 flex flex-col gap-1.5 sm:mb-4 sm:gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="panel grid grid-cols-2 rounded-full p-1">
           <ModeButton active={mode === "weekly"} onClick={() => setMode("weekly")}>
             GW สัปดาห์
           </ModeButton>
@@ -61,7 +47,7 @@ export function Dashboard({ data }: DashboardProps) {
           </ModeButton>
         </div>
 
-        <div className="flex items-center gap-2 overflow-x-auto pb-1">
+        <div className="-mx-3 flex items-center gap-2 overflow-x-auto px-3 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {Array.from({ length: maxGw }, (_, index) => {
             const gw = index + 1;
             const active = gw === selectedGw;
@@ -70,8 +56,8 @@ export function Dashboard({ data }: DashboardProps) {
                 key={gw}
                 type="button"
                 onClick={() => setSelectedGw(gw)}
-                className={`display rounded-full px-3 py-1.5 text-base transition ${
-                  active ? "bg-[var(--gold)] text-[#3d2a00]" : "panel text-[var(--foam)] hover:border-[var(--gold)]"
+                className={`display shrink-0 rounded-full px-2.5 py-1 text-sm sm:px-3 sm:py-1.5 sm:text-base ${
+                  active ? "bg-[var(--gold)] text-[#3d2a00]" : "panel text-[var(--foam)]"
                 }`}
               >
                 GW {gw}
@@ -83,15 +69,15 @@ export function Dashboard({ data }: DashboardProps) {
 
       {mode !== "weekly" && (
         <>
-          <p className="mb-3 text-sm text-[var(--muted)]">{subtitle}</p>
-          <div className="mb-4 flex flex-wrap gap-2 text-sm">
-            <Chip label="นำลีก" value={overallHi?.leader ? `${overallHi.leader.playerName} ${overallHi.leader.total}` : "—"} />
-            <Chip label="รั้งท้าย" value={overallHi?.last?.playerName ?? "—"} danger />
+          <p className="mb-2 hidden text-sm text-[var(--muted)] sm:mb-3 sm:block">{subtitle}</p>
+          <div className="mb-2 flex gap-2 overflow-x-auto pb-1 text-sm [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mb-3 sm:flex-wrap">
+            <Chip label="นำลีก" value={overallHi?.leader ? `${overallHi.leader.teamName} ${overallHi.leader.total}` : "—"} />
+            <Chip label="รั้งท้าย" value={overallHi?.last?.teamName ?? "—"} danger />
             <Chip
               label={overallHi?.climber ? "ขึ้นแรงสุด" : "นำห่าง"}
               value={
                 overallHi?.climber
-                  ? `${overallHi.climber.playerName} ▲${overallHi.climber.rankDelta}`
+                  ? `${overallHi.climber.teamName} ▲${overallHi.climber.rankDelta}`
                   : `${overallHi?.gapToFirst ?? 0} pts`
               }
             />
@@ -101,9 +87,8 @@ export function Dashboard({ data }: DashboardProps) {
 
       <StandingsTable mode={mode} weekly={weekly} overall={overall} gwComplete={gwStatus?.complete ?? false} />
 
-      <div className="mt-4">
+      <div className="mt-3 sm:mt-4">
         <PointsChart
-          mode={mode}
           selectedGw={selectedGw}
           rows={
             mode === "weekly"
@@ -127,8 +112,8 @@ export function Dashboard({ data }: DashboardProps) {
 
       {mode === "weekly" ? <RemainingFixtures selectedGw={selectedGw} status={gwStatus} /> : null}
 
-      <footer className="mt-5 flex flex-col items-start justify-between gap-3 text-sm text-[var(--muted)] sm:flex-row sm:items-center">
-        <p>ข้อมูลจาก FPL public API · กดรีเฟรชเมื่อต้องการดึงคะแนนใหม่</p>
+      <footer className="mt-4 flex flex-col items-start justify-between gap-2 text-sm text-[var(--muted)] sm:mt-5 sm:flex-row sm:items-center">
+        <p>ข้อมูลจาก FPL public API</p>
         <a href={officialUrl} target="_blank" rel="noreferrer" className="text-[var(--gold)] underline-offset-4 hover:underline">
           เปิดลีกทางการ
         </a>
@@ -150,8 +135,8 @@ function ModeButton({
     <button
       type="button"
       onClick={onClick}
-      className={`display rounded-full px-4 py-1.5 text-base transition ${
-        active ? "bg-[var(--gold)] text-[#3d2a00]" : "text-[var(--foam)] hover:text-[var(--gold-ink)]"
+      className={`display rounded-full px-3 py-1.5 text-sm transition sm:px-4 sm:text-base ${
+        active ? "bg-[var(--gold)] text-[#3d2a00]" : "text-[var(--foam)]"
       }`}
     >
       {children}
@@ -161,7 +146,7 @@ function ModeButton({
 
 function Chip({ label, value, danger = false }: { label: string; value: string; danger?: boolean }) {
   return (
-    <span className="panel rounded-full px-3 py-1.5">
+    <span className="panel shrink-0 rounded-full px-3 py-1.5">
       <span className={danger ? "text-[var(--rose)]" : "text-[var(--gold-ink)]"}>{label}</span>
       <span className="ml-2 font-semibold text-[var(--foam)]">{value}</span>
     </span>

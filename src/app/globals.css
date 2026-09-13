@@ -81,21 +81,6 @@ button {
   box-shadow: 0 16px 40px rgba(227, 160, 8, 0.14);
 }
 
-.race-banner {
-  display: grid;
-  grid-template-columns: 72px 1fr 72px;
-  align-items: center;
-  background: #fff;
-  border-bottom: 1px solid #d8e3d4;
-}
-
-.race-flag {
-  height: 56px;
-  background:
-    repeating-conic-gradient(#111 0% 25%, #fff 0% 50%)
-    50% / 16px 16px;
-}
-
 .race-board {
   display: grid;
   gap: 6px;
@@ -263,15 +248,25 @@ button {
 
 @media (max-width: 700px) {
   .race-row {
-    grid-template-columns: 7.2rem 1fr 3.6rem 12px;
+    grid-template-columns: 5.4rem 1fr 3.2rem 10px;
+    min-height: 54px;
+    padding-left: 6px;
   }
 
   .race-car-svg {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
+  }
+
+  .race-speed {
+    padding-right: 4px;
   }
 
   .race-speed span {
-    font-size: 1.25rem;
+    font-size: 1.15rem;
+  }
+
+  .race-speed small {
+    display: none;
   }
 }

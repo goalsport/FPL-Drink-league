@@ -32,7 +32,7 @@ export function ManagerPhoto({ entryId, name, className = "h-16 w-16" }: Manager
 function Initials({ name, className }: { name: string; className: string }) {
   return (
     <div
-      className={`display flex items-center justify-center rounded-full border-2 border-white bg-[#e7f4ea] text-lg text-[var(--mint)] shadow-sm ${className}`}
+      className={`display flex items-center justify-center rounded-full border-2 border-white bg-[#e7f4ea] text-[0.65rem] text-[var(--mint)] shadow-sm sm:text-lg ${className}`}
     >
       {initials(name)}
     </div>

@@ -2,7 +2,6 @@
 
 import { ManagerPhoto } from "@/components/ManagerPhoto";
 import { RaceVehicleSvg } from "@/components/RaceVehicle";
-import type { ViewMode } from "@/lib/types";
 import { vehiclesForRace } from "@/lib/vehicles";
 
 type ChartRow = {
@@ -14,25 +13,17 @@ type ChartRow = {
 };
 
 type PointsChartProps = {
-  mode: ViewMode;
   selectedGw: number;
   rows?: ChartRow[];
 };
 
-export function PointsChart({ mode, selectedGw, rows = [] }: PointsChartProps) {
+export function PointsChart({ selectedGw, rows = [] }: PointsChartProps) {
   const chartRows = [...(rows ?? [])].sort((a, b) => b.value - a.value);
   const maxValue = Math.max(1, ...chartRows.map((row) => row.value));
   const vehicles = vehiclesForRace(chartRows.length, selectedGw);
-  const title = mode === "weekly" ? `แข่งแต้ม GW ${selectedGw}` : `แข่งแต้ม total ถึง GW ${selectedGw}`;
 
   return (
     <section className="overflow-hidden rounded-3xl border border-[var(--line)] bg-white shadow-[0_12px_32px_rgba(28,70,42,0.08)]">
-      <div className="race-banner">
-        <span className="race-flag" aria-hidden />
-        <h2 className="display px-4 text-center text-3xl text-[#16331f] sm:text-4xl">{title}</h2>
-        <span className="race-flag" aria-hidden />
-      </div>
-
       <div className="race-board">
         {chartRows.map((row, index) => {
           const progress = Math.max(14, (row.value / maxValue) * 86);
@@ -44,10 +35,8 @@ export function PointsChart({ mode, selectedGw, rows = [] }: PointsChartProps) {
               <div className="race-id">
                 <span className="race-rank">{index + 1}</span>
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-white drop-shadow">{row.playerName}</p>
-                  <p className="truncate text-xs text-white/70">
-                    {row.teamName} · {vehicle.label}
-                  </p>
+                  <p className="truncate text-sm font-semibold text-white drop-shadow">{row.teamName}</p>
+                  <p className="hidden truncate text-xs text-white/70 sm:block">{vehicle.label}</p>
                 </div>
               </div>
 

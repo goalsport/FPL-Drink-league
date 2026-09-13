@@ -19,6 +19,11 @@ export const metadata: Metadata = {
   description: "สรุปคะแนนราย GW และคะแนนสะสมของเพื่อนใน Drink League",
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+};
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="th">

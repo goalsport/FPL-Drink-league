@@ -70,6 +70,8 @@ export type RemainingFixture = {
   awayLogo: string | null;
   started: boolean;
   minutes: number;
+  homeScore: number | null;
+  awayScore: number | null;
 };
 
 export type GwStatus = {
@@ -142,6 +144,35 @@ export type FplEventStatusResponse = {
   status?: { event: number }[];
 };
 
+export type FplLiveResponse = {
+  elements?: {
+    id: number;
+    stats?: {
+      minutes?: number;
+      total_points?: number;
+    };
+  }[];
+};
+
+export type FplPicksResponse = {
+  active_chip?: string | null;
+  automatic_subs?: { element_in: number; element_out: number }[];
+  entry_history?: {
+    points?: number;
+    total_points?: number;
+    event_transfers?: number;
+    event_transfers_cost?: number;
+    overall_rank?: number;
+    value?: number;
+    bank?: number;
+  };
+  picks?: {
+    element: number;
+    position: number;
+    multiplier: number;
+  }[];
+};
+
 export type FplFixture = {
   id: number;
   event: number | null;
@@ -152,4 +183,6 @@ export type FplFixture = {
   kickoff_time: string | null;
   team_h: number;
   team_a: number;
+  team_h_score: number | null;
+  team_a_score: number | null;
 };

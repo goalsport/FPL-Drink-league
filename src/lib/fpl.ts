@@ -6,6 +6,8 @@ import type {
   FplHistoryResponse,
   FplLeagueResponse,
   FplLeagueStanding,
+  FplLiveResponse,
+  FplPicksResponse,
   GwStatus,
   LeagueDashboard,
   ManagerGw,
@@ -77,6 +79,36 @@ function toIdentity(row: FplLeagueStanding): ManagerIdentity {
   };
 }
 
+function livePointsFromPicks(picks: FplPicksResponse | null | undefined, liveById: Map<number, number>): number {
+  return asArray(picks?.picks).reduce((sum, pick) => sum + (liveById.get(pick.element) ?? 0) * (pick.multiplier ?? 0), 0);
+}
+
+function applyLiveGw(
+  gws: ManagerGw[],
+  gw: number,
+  picks: FplPicksResponse | null | undefined,
+  liveById: Map<number, number>,
+): ManagerGw[] {
+  const livePoints = livePointsFromPicks(picks, liveById);
+  const history = picks?.entry_history;
+  const previousTotal = lastKnownTotal(gws, gw - 1)?.totalPoints ?? 0;
+  const hits = history?.event_transfers_cost ?? gws.find((row) => row.event === gw)?.hits ?? 0;
+  const current: ManagerGw = {
+    event: gw,
+    points: livePoints,
+    totalPoints: history?.total_points ?? previousTotal + livePoints - hits,
+    hits,
+    transfers: history?.event_transfers ?? gws.find((row) => row.event === gw)?.transfers ?? 0,
+    value: history?.value ?? 0,
+    bank: history?.bank ?? 0,
+    overallRank: history?.overall_rank ?? 0,
+    chip: picks?.active_chip ?? gws.find((row) => row.event === gw)?.chip ?? null,
+  };
+
+  const withoutCurrent = gws.filter((row) => row.event !== gw);
+  return [...withoutCurrent, current].sort((left, right) => left.event - right.event);
+}
+
 function toManagerGws(history: FplHistoryResponse | null | undefined): ManagerGw[] {
   const chipsByEvent = new Map(asArray(history?.chips).map((chip) => [chip.event, chip.name]));
 
@@ -146,6 +178,8 @@ function buildGwStatus(fixtures: FplFixture[], gw: number): GwStatus {
       awayLogo: teamLogo(fixture.team_a),
       started: Boolean(fixture.started),
       minutes: fixture.minutes,
+      homeScore: fixture.team_h_score,
+      awayScore: fixture.team_a_score,
     }))
     .sort((a, b) => (a.kickoff ?? "").localeCompare(b.kickoff ?? ""));
 
@@ -243,15 +277,27 @@ export async function getLeagueDashboard(leagueId = DEFAULT_LEAGUE_ID): Promise<
     identities.map((manager) => fplGet<FplHistoryResponse>(`/entry/${manager.entryId}/history/`)),
   );
 
-  const managers = identities.map((identity, index) => ({
-    identity,
-    gws: toManagerGws(histories[index]),
-  }));
-
   const currentFromStatus = asArray(eventStatus?.status)[0]?.event;
-  const maxFromHistory = Math.max(0, ...managers.flatMap(({ gws }) => gws.map((row) => row.event)));
+  const maxFromHistory = Math.max(
+    0,
+    ...histories.flatMap((history) => asArray(history?.current).map((row) => row.event)),
+  );
   const currentGw = currentFromStatus ?? maxFromHistory ?? 1;
   const maxGw = Math.max(currentGw, maxFromHistory, 1);
+
+  const [live, pickRows] = await Promise.all([
+    fplGet<FplLiveResponse>(`/event/${currentGw}/live/`),
+    Promise.all(identities.map((manager) => fplGet<FplPicksResponse>(`/entry/${manager.entryId}/event/${currentGw}/picks/`))),
+  ]);
+
+  const liveById = new Map(
+    asArray(live?.elements).map((element) => [element.id, element.stats?.total_points ?? 0] as const),
+  );
+
+  const managers = identities.map((identity, index) => ({
+    identity,
+    gws: applyLiveGw(toManagerGws(histories[index]), currentGw, pickRows[index], liveById),
+  }));
 
   const weeklyByGw: Record<number, WeeklyRow[]> = {};
   const overallByGw: Record<number, OverallRow[]> = {};

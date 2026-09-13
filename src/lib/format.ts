@@ -25,6 +25,13 @@ export function formatRank(rank: number): string {
   return rank.toLocaleString("th-TH");
 }
 
+export function rankMark(rank: number): string {
+  if (rank === 1) return "🥇";
+  if (rank === 2) return "🥈";
+  if (rank === 3) return "🥉";
+  return String(rank);
+}
+
 export function initials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return "?";
