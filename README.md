@@ -18,11 +18,17 @@ npm run dev
 
 เปิด [http://localhost:3000](http://localhost:3000)
 
-ถ้าจะชี้ไปลีกอื่น สร้างไฟล์ `.env.local`:
+## ลีกที่รองรับ (Multi-League Tabs)
 
-```
-LEAGUE_ID=530685
-```
+หน้าระบบมี Tab ด้านบนให้กดสลับดูแต่ละลีกได้ทันที:
+- 🍺 **DRINK LEAGUE** (ID: `530685`) — [เปิดใน FPL](https://fantasy.premierleague.com/th/leagues/530685)
+- ⚽ **PAKDEETHAILAND** (ID: `1129447`) — [เปิดใน FPL](https://fantasy.premierleague.com/th/leagues/1129447/standings/c)
+
+หรือเข้าดูผ่าน URL Query:
+- `http://localhost:3000/?league=530685` (หรือ `?league=drink-league`)
+- `http://localhost:3000/?league=1129447` (หรือ `?league=pakdeethailand`)
+
+หากต้องการเพิ่ม/แก้ไขลีก สามารถเข้าไปกำหนดเพิ่มในไฟล์ [src/lib/leagues.ts](file:///d:/work/football/FPL-Drink-league/src/lib/leagues.ts) ได้อย่างง่ายดาย
 
 ## รูปภาพ
 

@@ -1,11 +1,25 @@
 import { Dashboard } from "@/components/Dashboard";
-import { DEFAULT_LEAGUE_ID, getLeagueDashboard } from "@/lib/fpl";
+import { getLeagueDashboard } from "@/lib/fpl";
+import { AVAILABLE_LEAGUES, findLeague } from "@/lib/leagues";
 
 export const dynamic = "force-dynamic";
 
-export default async function HomePage() {
-  const leagueId = Number(process.env.LEAGUE_ID ?? DEFAULT_LEAGUE_ID);
-  const data = await getLeagueDashboard(leagueId);
+type PageProps = {
+  searchParams: Promise<{ league?: string }>;
+};
 
-  return <Dashboard data={data} />;
+export default async function HomePage({ searchParams }: PageProps) {
+  const resolvedParams = await searchParams;
+  const currentLeague = findLeague(resolvedParams?.league);
+  const data = await getLeagueDashboard(currentLeague.id);
+
+  return (
+    <Dashboard
+      key={currentLeague.id}
+      data={data}
+      leagues={AVAILABLE_LEAGUES}
+      currentLeagueId={currentLeague.id}
+    />
+  );
 }
+

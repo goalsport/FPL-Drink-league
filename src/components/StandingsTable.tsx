@@ -55,7 +55,11 @@ export function StandingsTable({ mode, weekly, overall, gwComplete = false }: St
             <article
               key={row.entryId}
               className={`grid grid-cols-[1.75rem_minmax(0,1fr)_2.4rem_2.6rem] items-center gap-1 px-3 py-1.5 ${
-                row.fineKind === "last" ? "fine-last" : row.fineKind === "second" ? "fine-second" : ""
+                row.fineKind === "last" || row.fineKind === "bottom"
+                  ? "fine-last"
+                  : row.fineKind === "second"
+                    ? "fine-second"
+                    : ""
               }`}
             >
               <RankMark rank={row.rank} />
@@ -92,7 +96,11 @@ export function StandingsTable({ mode, weekly, overall, gwComplete = false }: St
                 <tr
                   key={row.entryId}
                   className={`border-b border-[var(--line)] last:border-0 ${
-                    row.fineKind === "last" ? "fine-last" : row.fineKind === "second" ? "fine-second" : ""
+                    row.fineKind === "last" || row.fineKind === "bottom"
+                      ? "fine-last"
+                      : row.fineKind === "second"
+                        ? "fine-second"
+                        : ""
                   }`}
                 >
                   <td className="px-5 py-3">
@@ -253,7 +261,7 @@ function FineCell({ complete, fine, kind }: { complete: boolean; fine: number; k
     return <span>ปรับ {formatBaht(fine)}</span>;
   }
 
-  return <span>โอกาสโดนปรับ {kind === "last" ? 50 : 30} บาท</span>;
+  return <span>โอกาสโดนปรับ {formatBaht(fine)}</span>;
 }
 
 function MobileWeeklyMeta({ row, complete }: { row: WeeklyRow; complete: boolean }) {
@@ -270,7 +278,9 @@ function MobileWeeklyMeta({ row, complete }: { row: WeeklyRow; complete: boolean
       {row.fine > 0 ? (
         <span
           className={`rounded-full px-1.5 py-px font-semibold ${
-            row.fineKind === "last" ? "bg-[#ffd4d1] text-[#b42318]" : "bg-[#ffe8b8] text-[#9a6700]"
+            row.fineKind === "last" || row.fineKind === "bottom"
+              ? "bg-[#ffd4d1] text-[#b42318]"
+              : "bg-[#ffe8b8] text-[#9a6700]"
           }`}
         >
           {complete ? `ปรับ ${Math.round(row.fine)}฿` : `โอกาสโดนปรับ ${Math.round(row.fine)}฿`}

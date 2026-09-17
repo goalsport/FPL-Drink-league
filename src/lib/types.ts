@@ -19,7 +19,7 @@ export type ManagerGw = {
   chip: string | null;
 };
 
-export type FineKind = "last" | "second" | null;
+export type FineKind = "last" | "second" | "bottom" | null;
 
 export type WeeklyRow = ManagerIdentity & {
   rank: number;

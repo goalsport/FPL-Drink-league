@@ -189,8 +189,8 @@ function buildGwStatus(fixtures: FplFixture[], gw: number): GwStatus {
   };
 }
 
-function applyWeeklyFines(rows: WeeklyRow[]): WeeklyRow[] {
-  const fines = assignWeeklyFines(rows);
+function applyWeeklyFines(rows: WeeklyRow[], leagueId?: number): WeeklyRow[] {
+  const fines = assignWeeklyFines(rows, leagueId);
   return rows.map((row) => {
     const fine = fines.get(row.entryId);
     return {
@@ -309,7 +309,7 @@ export async function getLeagueDashboard(leagueId = DEFAULT_LEAGUE_ID): Promise<
     const status = buildGwStatus(asArray(fixtures), gw);
     gwStatus[gw] = status;
     const weekly = buildWeekly(managers, gw);
-    weeklyByGw[gw] = applyWeeklyFines(weekly);
+    weeklyByGw[gw] = applyWeeklyFines(weekly, leagueId);
     overallByGw[gw] = buildOverall(managers, gw);
     weeklyHighlights[gw] = weeklyHighlight(weeklyByGw[gw]);
   }
