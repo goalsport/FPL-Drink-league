@@ -20,6 +20,7 @@ export type ManagerGw = {
 };
 
 export type FineKind = "last" | "second" | "bottom" | null;
+export type SeasonEndKind = 5 | 6 | 7 | null;
 
 export type WeeklyRow = ManagerIdentity & {
   rank: number;
@@ -44,6 +45,8 @@ export type OverallRow = ManagerIdentity & {
   overallRank: number;
   played: boolean;
   seasonFine: number;
+  seasonEndFine: number;
+  seasonEndKind: SeasonEndKind;
 };
 
 export type WeeklyHighlight = {
@@ -91,6 +94,17 @@ export type LeagueDashboard = {
   weeklyHighlights: Record<number, WeeklyHighlight>;
   overallHighlights: Record<number, OverallHighlight>;
   gwStatus: Record<number, GwStatus>;
+  fineLedger: FineLedger;
+};
+
+export type FineLedgerRow = ManagerIdentity & {
+  total: number;
+};
+
+export type FineLedger = {
+  completedGws: number;
+  leagueTotal: number;
+  rows: FineLedgerRow[];
 };
 
 export type FplLeagueStanding = {

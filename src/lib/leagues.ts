@@ -8,6 +8,10 @@ export type LeagueConfig = {
   description?: string;
   fineRule: FineRule;
   fineDescription: string;
+  fineTieDescription?: string;
+  fineSecondTieDescription?: string;
+  seasonEndFine?: boolean;
+  seasonEndFineDescription?: string;
 };
 
 export const DEFAULT_LEAGUE_ID = 530685;
@@ -20,7 +24,11 @@ export const AVAILABLE_LEAGUES: LeagueConfig[] = [
     icon: "🍺",
     description: "Drink League ประจำกลุ่ม",
     fineRule: "drink_league",
-    fineDescription: "อันดับบ๊วย 50 บาท · รองบ๊วย 30 บาท (หารแต้มเท่า)",
+    fineDescription: "บ๊วยคนเดียว 50฿ · รองบ๊วยคนเดียว 30฿",
+    fineTieDescription: "ถ้าบ๊วยเสมอกัน 2 คนขึ้นไป รวม 80฿ (50+30) แล้วหารกัน เช่น 2 คนคนละ 40฿ คนถัดไปไม่โดนปรับรองบ๊วย",
+    fineSecondTieDescription: "ถ้าบ๊วยคนเดียว แต่รองบ๊วยเสมอกัน ให้บ๊วยจ่าย 50฿ ที่เหลือหารเฉพาะ 30฿ เช่น 2 คนคนละ 15฿",
+    seasonEndFine: true,
+    seasonEndFineDescription: "ครบ 38 GW: อันดับ 7 = 500฿ · อันดับ 6 = 300฿ · อันดับ 5 = 200฿",
   },
   {
     id: 1129447,
@@ -45,7 +53,11 @@ export function findLeague(query?: string | number | null): LeagueConfig {
         slug: String(envLeagueId),
         icon: "🏆",
         fineRule: "drink_league",
-        fineDescription: "อันดับบ๊วย 50 บาท · รองบ๊วย 30 บาท (หารแต้มเท่า)",
+        fineDescription: "บ๊วยคนเดียว 50฿ · รองบ๊วยคนเดียว 30฿",
+        fineTieDescription: "ถ้าบ๊วยเสมอกัน 2 คนขึ้นไป รวม 80฿ (50+30) แล้วหารกัน เช่น 2 คนคนละ 40฿ คนถัดไปไม่โดนปรับรองบ๊วย",
+        fineSecondTieDescription: "ถ้าบ๊วยคนเดียว แต่รองบ๊วยเสมอกัน ให้บ๊วยจ่าย 50฿ ที่เหลือหารเฉพาะ 30฿ เช่น 2 คนคนละ 15฿",
+        seasonEndFine: true,
+        seasonEndFineDescription: "ครบ 38 GW: อันดับ 7 = 500฿ · อันดับ 6 = 300฿ · อันดับ 5 = 200฿",
       };
     }
     return AVAILABLE_LEAGUES[0];
@@ -70,7 +82,11 @@ export function findLeague(query?: string | number | null): LeagueConfig {
       slug: String(queryNum),
       icon: "🏆",
       fineRule: "drink_league",
-      fineDescription: "อันดับบ๊วย 50 บาท · รองบ๊วย 30 บาท (หารแต้มเท่า)",
+      fineDescription: "บ๊วยคนเดียว 50฿ · รองบ๊วยคนเดียว 30฿",
+      fineTieDescription: "ถ้าบ๊วยเสมอกัน 2 คนขึ้นไป รวม 80฿ (50+30) แล้วหารกัน เช่น 2 คนคนละ 40฿ คนถัดไปไม่โดนปรับรองบ๊วย",
+      fineSecondTieDescription: "ถ้าบ๊วยคนเดียว แต่รองบ๊วยเสมอกัน ให้บ๊วยจ่าย 50฿ ที่เหลือหารเฉพาะ 30฿ เช่น 2 คนคนละ 15฿",
+      seasonEndFine: true,
+      seasonEndFineDescription: "ครบ 38 GW: อันดับ 7 = 500฿ · อันดับ 6 = 300฿ · อันดับ 5 = 200฿",
     };
   }
 

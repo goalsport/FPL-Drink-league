@@ -1,9 +1,15 @@
 import { findLeague } from "./leagues";
-import type { FineKind } from "./types";
+import type { FineKind, SeasonEndKind } from "./types";
 
 export const LAST_PLACE_FINE = 50;
 export const SECOND_LAST_FINE = 30;
 export const PAKDEE_FINE = 50;
+export const SEASON_END_GW = 38;
+export const SEASON_END_FINES: Record<number, number> = {
+  7: 500,
+  6: 300,
+  5: 200,
+};
 
 export type FineShare = {
   amount: number;
@@ -25,47 +31,47 @@ function sharePot(pot: number, count: number): number {
 
 /**
  * กฎค่าปรับ Drink League:
- * - อันดับบ๊วย ปรับ 50 บาท (ถ้าแต้มเท่ากันหารกัน)
- * - อันดับรองบ๊วย ปรับ 30 บาท (ถ้าแต้มเท่ากันหารกัน)
+ * - ช่องบ๊วย 50 บาท, ช่องรองบ๊วย 30 บาท
+ * - กลุ่มแต้มต่ำสุดกินช่องจากท้ายตามจำนวนคน แล้วหารกัน
+ *   เช่น เสมอบ๊วย 2 คน = กินทั้ง 50+30 หารคนละ 40 ไม่ดันคนบนให้เป็นรองบ๊วย
  */
 export function assignDrinkLeagueFines(
-  rows: { entryId: number; rank: number; played: boolean }[],
+  rows: { entryId: number; rank: number; played: boolean; points?: number }[],
 ): Map<number, FineShare> {
   const result = new Map<number, FineShare>();
   const played = rows.filter((row) => row.played);
-  const ranks = [...new Set(played.map((row) => row.rank))].sort((a, b) => b - a);
-  const lastRank = ranks[0];
-  const secondRank = ranks[1];
 
   for (const row of rows) {
-    if (!row.played || lastRank === undefined) {
-      result.set(row.entryId, ZERO_FINE);
-      continue;
-    }
-
-    if (row.rank === lastRank) {
-      const sharedWith = played.filter((item) => item.rank === lastRank).length;
-      result.set(row.entryId, {
-        amount: sharePot(LAST_PLACE_FINE, sharedWith),
-        kind: "last",
-        sharedWith,
-        pot: LAST_PLACE_FINE,
-      });
-      continue;
-    }
-
-    if (secondRank !== undefined && row.rank === secondRank) {
-      const sharedWith = played.filter((item) => item.rank === secondRank).length;
-      result.set(row.entryId, {
-        amount: sharePot(SECOND_LAST_FINE, sharedWith),
-        kind: "second",
-        sharedWith,
-        pot: SECOND_LAST_FINE,
-      });
-      continue;
-    }
-
     result.set(row.entryId, ZERO_FINE);
+  }
+
+  const uniquePoints = [...new Set(played.map((row) => row.points ?? 0))].sort((a, b) => a - b);
+  if (played.length === 0 || uniquePoints.length <= 1) {
+    return result;
+  }
+
+  const pots = [LAST_PLACE_FINE, SECOND_LAST_FINE];
+  let consumed = 0;
+
+  for (const points of uniquePoints) {
+    if (consumed >= pots.length) break;
+
+    const group = played.filter((row) => (row.points ?? 0) === points);
+    const take = pots.slice(consumed, consumed + group.length);
+    const pot = take.reduce((sum, value) => sum + value, 0);
+    const amount = sharePot(pot, group.length);
+    const kind: FineKind = take.includes(LAST_PLACE_FINE) ? "last" : "second";
+
+    for (const row of group) {
+      result.set(row.entryId, {
+        amount,
+        kind,
+        sharedWith: group.length,
+        pot,
+      });
+    }
+
+    consumed += group.length;
   }
 
   return result;
@@ -130,5 +136,30 @@ export function assignWeeklyFines(
   }
 
   return assignDrinkLeagueFines(rows);
+}
+
+export type SeasonEndShare = {
+  amount: number;
+  kind: SeasonEndKind;
+};
+
+/**
+ * ค่าปรับจบลีก (ครบ 38 GW) ตามอันดับรวม:
+ * - อันดับ 7 ปรับ 500 บาท
+ * - อันดับ 6 ปรับ 300 บาท
+ * - อันดับ 5 ปรับ 200 บาท
+ */
+export function assignSeasonEndFines(
+  rows: { entryId: number; rank: number; played: boolean }[],
+): Map<number, SeasonEndShare> {
+  const result = new Map<number, SeasonEndShare>();
+
+  for (const row of rows) {
+    const amount = SEASON_END_FINES[row.rank] ?? 0;
+    const kind = row.rank === 5 || row.rank === 6 || row.rank === 7 ? row.rank : null;
+    result.set(row.entryId, { amount, kind });
+  }
+
+  return result;
 }
 

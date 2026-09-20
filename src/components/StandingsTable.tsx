@@ -3,7 +3,7 @@
 import { ManagerPhoto } from "@/components/ManagerPhoto";
 import { RankMark } from "@/components/RankMark";
 import { TeamBadge } from "@/components/TeamBadge";
-import { chipLabel, formatBaht, formatRank } from "@/lib/format";
+import { chipLabel, formatBaht, formatRank, seasonEndFineLabel } from "@/lib/format";
 import type { FineKind, OverallRow, ViewMode, WeeklyRow } from "@/lib/types";
 
 type StandingsTableProps = {
@@ -11,9 +11,22 @@ type StandingsTableProps = {
   weekly: WeeklyRow[];
   overall: OverallRow[];
   gwComplete?: boolean;
+  leagueFineTotal?: number;
 };
 
 
+function fineRowClass(kind: FineKind): string {
+  if (kind === "last" || kind === "bottom") return "fine-last";
+  if (kind === "second") return "fine-second";
+  return "";
+}
+
+function fineRoleLabel(kind: FineKind): string | null {
+  if (kind === "last") return "บ๊วย";
+  if (kind === "second") return "รองบ๊วย";
+  if (kind === "bottom") return "4 ท้าย";
+  return null;
+}
 function ManagerCell({
   entryId,
   playerName,
@@ -36,7 +49,13 @@ function ManagerCell({
   );
 }
 
-export function StandingsTable({ mode, weekly, overall, gwComplete = false }: StandingsTableProps) {
+export function StandingsTable({
+  mode,
+  weekly,
+  overall,
+  gwComplete = false,
+  leagueFineTotal = 0,
+}: StandingsTableProps) {
   if (mode === "weekly") {
     return (
       <section className="panel weekly-featured overflow-hidden rounded-3xl">
@@ -54,13 +73,7 @@ export function StandingsTable({ mode, weekly, overall, gwComplete = false }: St
           {(weekly ?? []).map((row) => (
             <article
               key={row.entryId}
-              className={`grid grid-cols-[1.75rem_minmax(0,1fr)_2.4rem_2.6rem] items-center gap-1 px-3 py-1.5 ${
-                row.fineKind === "last" || row.fineKind === "bottom"
-                  ? "fine-last"
-                  : row.fineKind === "second"
-                    ? "fine-second"
-                    : ""
-              }`}
+              className={`grid grid-cols-[1.75rem_minmax(0,1fr)_2.4rem_2.6rem] items-center gap-1 px-3 py-1.5 ${fineRowClass(row.fineKind)}`}
             >
               <RankMark rank={row.rank} />
               <div className="flex min-w-0 items-center gap-1.5">
@@ -85,7 +98,7 @@ export function StandingsTable({ mode, weekly, overall, gwComplete = false }: St
                 <th className="px-5 py-3 font-medium">ทีม</th>
                 <th className="px-5 py-3 font-medium">แต้ม GW</th>
                 <th className="px-5 py-3 font-medium">โอน</th>
-                <th className="px-5 py-3 font-medium">หัก</th>
+                <th className="px-5 py-3 font-medium">ซื้อ/ขาย</th>
                 <th className="px-5 py-3 font-medium">ชิป</th>
                 <th className="px-5 py-3 font-medium">ค่าปรับ</th>
                 <th className="px-5 py-3 font-medium">แต้ม total</th>
@@ -95,13 +108,7 @@ export function StandingsTable({ mode, weekly, overall, gwComplete = false }: St
               {(weekly ?? []).map((row) => (
                 <tr
                   key={row.entryId}
-                  className={`border-b border-[var(--line)] last:border-0 ${
-                    row.fineKind === "last" || row.fineKind === "bottom"
-                      ? "fine-last"
-                      : row.fineKind === "second"
-                        ? "fine-second"
-                        : ""
-                  }`}
+                  className={`border-b border-[var(--line)] last:border-0 ${fineRowClass(row.fineKind)}`}
                 >
                   <td className="px-5 py-3">
                     <RankMark rank={row.rank} className="sm:h-8 sm:w-8 sm:text-base" />
@@ -127,21 +134,6 @@ export function StandingsTable({ mode, weekly, overall, gwComplete = false }: St
             </tbody>
           </table>
         </div>
-
-        <dl className="hidden gap-3 border-t border-[var(--line)] px-5 py-4 text-sm text-[var(--muted)] md:grid md:grid-cols-3">
-          <div>
-            <dt className="font-semibold text-[var(--foam)]">แต้ม GW</dt>
-            <dd>คะแนนเฉพาะเกมวีคนั้น ใช้จัดอันดับและคิดค่าปรับ</dd>
-          </div>
-          <div>
-            <dt className="font-semibold text-[var(--foam)]">แต้ม total</dt>
-            <dd>คะแนนสะสมรวมทุก GW จนถึงวีคนี้ ตาม FPL</dd>
-          </div>
-          <div>
-            <dt className="font-semibold text-[var(--foam)]">หัก</dt>
-            <dd>แต้มที่โดนตัดจากการซื้อขายนักเตะเกินฟรีทรานสเฟอร์</dd>
-          </div>
-        </dl>
       </section>
     );
   }
@@ -150,9 +142,12 @@ export function StandingsTable({ mode, weekly, overall, gwComplete = false }: St
 
   return (
     <section className="panel overflow-hidden rounded-3xl">
-      <div className="border-b border-[var(--line)] px-4 py-3 sm:px-5 sm:py-4">
-        <p className="display text-xl text-[var(--foam)] sm:text-2xl">ตาราง GW รวม</p>
-        <p className="text-sm text-[var(--muted)]">แต้ม total คือคะแนนสะสมถึงเกมวีคที่เลือก พร้อมค่าปรับสะสมตามกติกาลีก</p>
+      <div className="flex items-start justify-between gap-3 border-b border-[var(--line)] px-4 py-3 sm:px-5 sm:py-4">
+        <div className="min-w-0">
+          <p className="display text-xl text-[var(--foam)] sm:text-2xl">ตาราง GW รวม</p>
+          <p className="hidden text-sm text-[var(--muted)] sm:block">แต้ม total คือคะแนนสะสมถึงเกมวีคที่เลือก พร้อมค่าปรับสะสมตามกติกาลีก</p>
+        </div>
+        <p className="display shrink-0 text-xl text-[var(--rose)] sm:text-2xl">{formatBaht(leagueFineTotal)}</p>
       </div>
 
       <div className="md:hidden">
@@ -178,7 +173,7 @@ export function StandingsTable({ mode, weekly, overall, gwComplete = false }: St
                 <p className="flex flex-wrap items-center gap-1 text-[10px] leading-tight">
                   <RankDelta delta={row.rankDelta} />
                   <span className={row.hits > 0 ? "font-semibold text-[var(--rose)]" : "text-[var(--muted)]"}>
-                    หัก {row.hits > 0 ? `-${row.hits}` : "0"}
+                    ซื้อ/ขาย {row.hits > 0 ? `-${row.hits}` : "0"}
                   </span>
                   {row.seasonFine > 0 ? (
                     <span
@@ -189,6 +184,11 @@ export function StandingsTable({ mode, weekly, overall, gwComplete = false }: St
                       }`}
                     >
                       {Math.round(row.seasonFine)}฿
+                    </span>
+                  ) : null}
+                  {row.seasonEndFine > 0 ? (
+                    <span className="rounded-full bg-[#ffd4d1] px-1.5 py-px font-semibold text-[#b42318]">
+                      {seasonEndFineLabel(row.seasonEndKind)} {Math.round(row.seasonEndFine)}฿
                     </span>
                   ) : null}
                 </p>
@@ -208,7 +208,7 @@ export function StandingsTable({ mode, weekly, overall, gwComplete = false }: St
               <th className="px-5 py-3 font-medium">ขึ้น/ลง</th>
               <th className="px-5 py-3 font-medium">ทีม</th>
               <th className="px-5 py-3 font-medium">แต้ม GW</th>
-              <th className="px-5 py-3 font-medium">หัก</th>
+              <th className="px-5 py-3 font-medium">ซื้อ/ขาย</th>
               <th className="px-5 py-3 font-medium">ค่าปรับสะสม</th>
               <th className="px-5 py-3 font-medium">อันดับโลก</th>
               <th className="px-5 py-3 font-medium">แต้ม total</th>
@@ -240,6 +240,11 @@ export function StandingsTable({ mode, weekly, overall, gwComplete = false }: St
                 <td className="px-5 py-3 text-[var(--rose)]">{row.hits > 0 ? `-${row.hits}` : "0"}</td>
                 <td className="px-5 py-3 font-semibold text-[var(--rose)]">
                   {row.seasonFine > 0 ? formatBaht(row.seasonFine) : "—"}
+                  {row.seasonEndFine > 0 ? (
+                    <p className="text-xs font-medium text-[var(--rose)]">
+                      {seasonEndFineLabel(row.seasonEndKind)} {formatBaht(row.seasonEndFine)}
+                    </p>
+                  ) : null}
                 </td>
                 <td className="px-5 py-3 text-[var(--muted)]">{row.overallRank ? formatRank(row.overallRank) : "—"}</td>
                 <td className="px-5 py-3 text-lg font-semibold text-[var(--gold-ink)]">{row.total}</td>
@@ -253,37 +258,41 @@ export function StandingsTable({ mode, weekly, overall, gwComplete = false }: St
 }
 
 function FineCell({ complete, fine, kind }: { complete: boolean; fine: number; kind: FineKind }) {
-  if (fine <= 0 || !kind) {
+  const role = fineRoleLabel(kind);
+  if (fine <= 0 || !kind || !role) {
     return <span>—</span>;
   }
 
-  if (complete) {
-    return <span>ปรับ {formatBaht(fine)}</span>;
-  }
+  const prefix = complete ? "ปรับ" : "โอกาสโดนปรับ";
+  const tone = kind === "second" ? "text-[#9a6700]" : "text-[var(--rose)]";
 
-  return <span>โอกาสโดนปรับ {formatBaht(fine)}</span>;
+  return (
+    <span className={tone}>
+      {role} · {prefix} {formatBaht(fine)}
+    </span>
+  );
 }
 
 function MobileWeeklyMeta({ row, complete }: { row: WeeklyRow; complete: boolean }) {
   const chip = chipLabel(row.chip);
+  const role = fineRoleLabel(row.fineKind);
+  const last = row.fineKind === "last" || row.fineKind === "bottom";
 
   return (
     <p className="flex flex-wrap items-center gap-1 text-[10px] leading-tight">
       <span className={row.hits > 0 ? "font-semibold text-[var(--rose)]" : "text-[var(--muted)]"}>
-        หัก {row.hits > 0 ? `-${row.hits}` : "0"}
+        ซื้อ/ขาย {row.hits > 0 ? `-${row.hits}` : "0"}
       </span>
       {chip ? (
         <span className="rounded-full bg-[#fff3c4] px-1.5 py-px font-semibold text-[#7a5a00]">{chip}</span>
       ) : null}
-      {row.fine > 0 ? (
+      {row.fine > 0 && role ? (
         <span
           className={`rounded-full px-1.5 py-px font-semibold ${
-            row.fineKind === "last" || row.fineKind === "bottom"
-              ? "bg-[#ffd4d1] text-[#b42318]"
-              : "bg-[#ffe8b8] text-[#9a6700]"
+            last ? "bg-[#ffd4d1] text-[#b42318]" : "bg-[#ffe8b8] text-[#9a6700]"
           }`}
         >
-          {complete ? `ปรับ ${Math.round(row.fine)}฿` : `โอกาสโดนปรับ ${Math.round(row.fine)}฿`}
+          {role} {complete ? `${Math.round(row.fine)}฿` : `โอกาส ${Math.round(row.fine)}฿`}
         </span>
       ) : null}
     </p>

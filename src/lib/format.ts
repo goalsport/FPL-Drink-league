@@ -45,3 +45,8 @@ export function formatBaht(amount: number): string {
     maximumFractionDigits: 2,
   })} บาท`;
 }
+
+export function seasonEndFineLabel(kind: 5 | 6 | 7 | null): string | null {
+  if (kind === 5 || kind === 6 || kind === 7) return `จบลีก อันดับ ${kind}`;
+  return null;
+}

@@ -69,11 +69,13 @@ button {
 }
 
 .fine-last {
-  background: #fff1f0;
+  background: #ffe8e6;
+  box-shadow: inset 4px 0 0 #d64545;
 }
 
 .fine-second {
-  background: #fff7e8;
+  background: #fff6dc;
+  box-shadow: inset 4px 0 0 #e3a008;
 }
 
 .weekly-featured {

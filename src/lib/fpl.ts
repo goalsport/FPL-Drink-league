@@ -1,4 +1,5 @@
-import { assignWeeklyFines } from "./fines";
+import { assignSeasonEndFines, assignWeeklyFines, SEASON_END_GW } from "./fines";
+import { findLeague } from "./leagues";
 import { teamLogo, teamName, teamShort } from "./teams";
 import type {
   FplEventStatusResponse,
@@ -8,6 +9,7 @@ import type {
   FplLeagueStanding,
   FplLiveResponse,
   FplPicksResponse,
+  FineLedger,
   GwStatus,
   LeagueDashboard,
   ManagerGw,
@@ -222,6 +224,8 @@ function buildOverall(
         overallRank: last?.overallRank ?? 0,
         played: Boolean(row),
         seasonFine: 0,
+        seasonEndFine: 0,
+        seasonEndKind: null,
       };
     })
     .sort((a, b) => b.total - a.total)
@@ -326,6 +330,35 @@ export async function getLeagueDashboard(leagueId = DEFAULT_LEAGUE_ID): Promise<
     overallHighlights[gw] = overallHighlight(overallByGw[gw]);
   }
 
+  const leagueConfig = findLeague(leagueId);
+  if (leagueConfig.seasonEndFine && gwStatus[SEASON_END_GW]?.complete) {
+    const endFines = assignSeasonEndFines(overallByGw[SEASON_END_GW] ?? []);
+    for (let gw = SEASON_END_GW; gw <= maxGw; gw += 1) {
+      for (const row of overallByGw[gw] ?? []) {
+        const extra = endFines.get(row.entryId);
+        row.seasonEndFine = extra?.amount ?? 0;
+        row.seasonEndKind = extra?.kind ?? null;
+        row.seasonFine += row.seasonEndFine;
+      }
+    }
+  }
+
+  const latestOverall = overallByGw[maxGw] ?? [];
+  const completedGws = Object.values(gwStatus).filter((status) => status.complete).length;
+  const fineLedger: FineLedger = {
+    completedGws,
+    leagueTotal: latestOverall.reduce((sum, row) => sum + row.seasonFine, 0),
+    rows: [...latestOverall]
+      .map((row) => ({
+        entryId: row.entryId,
+        teamName: row.teamName,
+        playerName: row.playerName,
+        badgeUrl: row.badgeUrl,
+        total: row.seasonFine,
+      }))
+      .sort((a, b) => b.total - a.total || a.teamName.localeCompare(b.teamName)),
+  };
+
   return {
     leagueId: league.league.id,
     leagueName: league.league.name,
@@ -338,5 +371,6 @@ export async function getLeagueDashboard(leagueId = DEFAULT_LEAGUE_ID): Promise<
     weeklyHighlights,
     overallHighlights,
     gwStatus,
+    fineLedger,
   };
 }
